@@ -1,5 +1,3 @@
-
-
 function createElement(type, props, ...children){
     return {
         type,
@@ -151,6 +149,7 @@ let wipRoot = null;
 let deletions = null;
 
 function workLoop(deadLine) {
+    
     let shouldYield = false;
     while (nextUnitOfWork && !shouldYield) {
         nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
@@ -201,7 +200,7 @@ function reconcileChildren(wipFiber, elements){
     let prevSibling = null;
 
     while(
-        index < elements.length ||
+        index < elements.length || //this is beautiful
         oldFiber != null    
     ){
         const element = elements[index];
@@ -293,5 +292,5 @@ void function main() {
         Didact.render(element, container);
     }
     
-    renderer("FF");
+    renderer("World");
 }();
