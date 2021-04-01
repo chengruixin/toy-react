@@ -307,27 +307,38 @@ const Didact = {
 
 
 void function main() {
+    let state = {
+        name : ""
+    };
 
     /** @jsx Didact.createElement */
     function App({name, greeting}){
+        console.log(state.name);
+        
         return (
             <div>
-                <h1>Hi, {name}</h1>
+                <h1>Hi, {state.name}</h1>
                 <p>{ greeting ? greeting : "gentle greeting"} </p>
-                <Com1/>
+                <Com1 />
             </div>
         )
     }
     
 
-    function Com1(){
+    function Com1({updateValue}){
+        let value = "";
+        const handleChange = (e)=>{
+            state.name = e.target.value;
+            Didact.render(element,container);
+        }
         return (
             <div>
                 hello agian
+                <input onInput={handleChange} value={value}></input>
             </div>
         )
     }
-    const element = <App name="ruixin" greeting="bablal"/>
+    const element = <App greeting="bablal"/>
     const container = document.querySelector("#root");
     Didact.render(element, container);
 }();
