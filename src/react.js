@@ -1,21 +1,27 @@
 import React, {useEffect, useState} from 'react';
 import ReactDom from 'react-dom';
-function App(){
-    const [state, setState] = useState(1);
+
+
+function Counter() {
+    
+    const [state, setState] = useState(1)
+
     useEffect(()=>{
-        console.log("jell");
-        console.log(document.querySelector("#b").childNodes);
-        setState(2);
+        console.log("hello", " and is mounted");
+
         return ()=>{
-            console.log('fdf');
+            console.log("dismounted");
         }
     })
+
     return (
-        <div id="b">
-            Hello
-        </div>
+      <h1 onClick={() => setState(c => c + 1)}>
+        Count: {state}
+      </h1>
     )
 }
 
+
+const element = <Counter />
 const container = document.querySelector("#root");
-ReactDom.render(<App/>, container);
+ReactDom.render(element, container);

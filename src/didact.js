@@ -134,6 +134,16 @@ function commitWork(fiber){
     }
     commitWork(fiber.child);
     commitWork(fiber.sibling);
+
+    // Emit useEffect hooks
+    if(fiber.effectHooks && fiber.effectHooks.length > 0){
+        for(let i = 0; i < fiber.effectHooks.length; i++){
+            const fn = fiber.effectHooks[i];
+            const callbackResult = fn.call(null);
+
+            fiber.dismountHooks.push(callbackResult);
+        }
+    }
 }
 
 function commitDeletion(fiber, domParent){
@@ -221,6 +231,21 @@ function updateFunctionComponent(fiber){
     wipFiber = fiber;
     hookIndex = 0;
     wipFiber.hooks = [];
+    wipFiber.effectHooks = [];
+    wipFiber.dismountHooks = [];
+
+    //run dismount hooks
+    const oldDismountHooks =  
+        wipFiber.alternate &&
+        wipFiber.alternate.dismountHooks
+    
+    if(oldDismountHooks){
+        oldDismountHooks.forEach( dismoutHook => {
+            dismoutHook.call(null);
+        });
+    }   
+    
+
     const chilren = [fiber.type(fiber.props)];
     reconcileChildren(fiber, chilren);
 }
@@ -257,6 +282,10 @@ export function useState(initial){
     wipFiber.hooks.push(hook);
     hookIndex++;
     return [hook.state, setState];
+}
+
+export function useEffect(callback){
+    wipFiber.effectHooks.push(callback);
 }
 
 function updateHostComponent(fiber){
