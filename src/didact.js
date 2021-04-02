@@ -1,4 +1,4 @@
-function createElement(type, props, ...children){
+export function createElement(type, props, ...children){
     return {
         type,
 
@@ -151,7 +151,8 @@ function commitDeletion(fiber, domParent){
     //     commitDeletion(fiber.child, domParent);
     // }
 }
-function render(element, container) {
+
+export function render(element, container) {
     wipRoot = {
         dom : container,
         props : {
@@ -196,10 +197,6 @@ function performUnitOfWork(fiber){
     } else {
         updateHostComponent(fiber);
     }
-    
-    
-    
-
 
     // TODO return next unit of work
     if(fiber.child){
@@ -217,9 +214,49 @@ function performUnitOfWork(fiber){
     }
 }
 
+let wipFiber = null;
+let hookIndex = null;
+
 function updateFunctionComponent(fiber){
+    wipFiber = fiber;
+    hookIndex = 0;
+    wipFiber.hooks = [];
     const chilren = [fiber.type(fiber.props)];
     reconcileChildren(fiber, chilren);
+}
+
+export function useState(initial){
+
+    const oldHook = 
+        wipFiber.alternate &&
+        wipFiber.alternate.hooks &&
+        wipFiber.alternate.hooks[hookIndex];
+
+    const hook = {
+        state : oldHook ? oldHook.state : initial,
+        queue : []
+    }
+
+    const actions = oldHook ? oldHook.queue : []
+    actions.forEach( action => {
+        hook.state = action(hook.state);
+    })
+
+    const setState = action => {
+        hook.queue.push(action);
+
+        wipRoot = {
+            dom : currentRoot.dom,
+            props : currentRoot.props,
+            alternate : currentRoot
+        }
+
+        nextUnitOfWork = wipRoot;
+        deletions = []
+    }
+    wipFiber.hooks.push(hook);
+    hookIndex++;
+    return [hook.state, setState];
 }
 
 function updateHostComponent(fiber){
@@ -293,52 +330,9 @@ function reconcileChildren(wipFiber, elements){
     }
 }
 
-const Didact = {
+
+export default {
     createElement,
-    render
+    render,
+    useState
 }
-
-// const element = Didact.createElement(
-//     "div",
-//     { id : "foo" },
-//     Didact.createElement("a", null, "bar"),
-//     Didact.createElement("b")
-// )
-
-
-void function main() {
-    let state = {
-        name : ""
-    };
-
-    /** @jsx Didact.createElement */
-    function App({name, greeting}){
-        console.log(state.name);
-        
-        return (
-            <div>
-                <h1>Hi, {state.name}</h1>
-                <p>{ greeting ? greeting : "gentle greeting"} </p>
-                <Com1 />
-            </div>
-        )
-    }
-    
-
-    function Com1({updateValue}){
-        let value = "";
-        const handleChange = (e)=>{
-            state.name = e.target.value;
-            Didact.render(element,container);
-        }
-        return (
-            <div>
-                hello agian
-                <input onInput={handleChange} value={value}></input>
-            </div>
-        )
-    }
-    const element = <App greeting="bablal"/>
-    const container = document.querySelector("#root");
-    Didact.render(element, container);
-}();
