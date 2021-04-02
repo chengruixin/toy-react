@@ -1,9 +1,12 @@
 {
   "name": "toy-react",
   "version": "1.0.0",
-  "description": "",
+  "description": "This is a homemade react",
   "main": "index.js",
-  "dependencies": {},
+  "dependencies": {
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.13.13",
     "@babel/plugin-transform-react-jsx": "^7.13.12",
@@ -17,7 +20,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack",
-    "server": "webpack serve"
+    "start": "webpack serve"
   },
   "author": "",
   "license": "ISC"

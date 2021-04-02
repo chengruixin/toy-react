@@ -1,4 +1,5 @@
-let a = true;
-let b = false;
+const fn = () => {
+    console.log(this);
+}
 
-console.log(a && b);
+fn.call();

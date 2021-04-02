@@ -1,4 +1,4 @@
-function createElement(type, props, ...children){
+export function createElement(type, props, ...children){
     return {
         type,
 
@@ -134,6 +134,16 @@ function commitWork(fiber){
     }
     commitWork(fiber.child);
     commitWork(fiber.sibling);
+
+    // Emit useEffect hooks
+    if(fiber.effectHooks && fiber.effectHooks.length > 0){
+        for(let i = 0; i < fiber.effectHooks.length; i++){
+            const fn = fiber.effectHooks[i];
+            const callbackResult = fn.call(null);
+
+            fiber.dismountHooks.push(callbackResult);
+        }
+    }
 }
 
 function commitDeletion(fiber, domParent){
@@ -151,7 +161,8 @@ function commitDeletion(fiber, domParent){
     //     commitDeletion(fiber.child, domParent);
     // }
 }
-function render(element, container) {
+
+export function render(element, container) {
     wipRoot = {
         dom : container,
         props : {
@@ -196,10 +207,6 @@ function performUnitOfWork(fiber){
     } else {
         updateHostComponent(fiber);
     }
-    
-    
-    
-
 
     // TODO return next unit of work
     if(fiber.child){
@@ -217,9 +224,68 @@ function performUnitOfWork(fiber){
     }
 }
 
+let wipFiber = null;
+let hookIndex = null;
+
 function updateFunctionComponent(fiber){
+    wipFiber = fiber;
+    hookIndex = 0;
+    wipFiber.hooks = [];
+    wipFiber.effectHooks = [];
+    wipFiber.dismountHooks = [];
+
+    //run dismount hooks
+    const oldDismountHooks =  
+        wipFiber.alternate &&
+        wipFiber.alternate.dismountHooks
+    
+    if(oldDismountHooks){
+        oldDismountHooks.forEach( dismoutHook => {
+            dismoutHook.call(null);
+        });
+    }   
+    
+
     const chilren = [fiber.type(fiber.props)];
     reconcileChildren(fiber, chilren);
+}
+
+export function useState(initial){
+
+    const oldHook = 
+        wipFiber.alternate &&
+        wipFiber.alternate.hooks &&
+        wipFiber.alternate.hooks[hookIndex];
+
+    const hook = {
+        state : oldHook ? oldHook.state : initial,
+        queue : []
+    }
+
+    const actions = oldHook ? oldHook.queue : []
+    actions.forEach( action => {
+        hook.state = action(hook.state);
+    })
+
+    const setState = action => {
+        hook.queue.push(action);
+
+        wipRoot = {
+            dom : currentRoot.dom,
+            props : currentRoot.props,
+            alternate : currentRoot
+        }
+
+        nextUnitOfWork = wipRoot;
+        deletions = []
+    }
+    wipFiber.hooks.push(hook);
+    hookIndex++;
+    return [hook.state, setState];
+}
+
+export function useEffect(callback){
+    wipFiber.effectHooks.push(callback);
 }
 
 function updateHostComponent(fiber){
@@ -293,41 +359,9 @@ function reconcileChildren(wipFiber, elements){
     }
 }
 
-const Didact = {
+
+export default {
     createElement,
-    render
+    render,
+    useState
 }
-
-// const element = Didact.createElement(
-//     "div",
-//     { id : "foo" },
-//     Didact.createElement("a", null, "bar"),
-//     Didact.createElement("b")
-// )
-
-
-void function main() {
-
-    /** @jsx Didact.createElement */
-    function App({name, greeting}){
-        return (
-            <div>
-                <h1>Hi, {name}</h1>
-                <p>{ greeting ? greeting : "gentle greeting"} </p>
-                <Com1/>
-            </div>
-        )
-    }
-    
-
-    function Com1(){
-        return (
-            <div>
-                hello agian
-            </div>
-        )
-    }
-    const element = <App name="ruixin" greeting="bablal"/>
-    const container = document.querySelector("#root");
-    Didact.render(element, container);
-}();
